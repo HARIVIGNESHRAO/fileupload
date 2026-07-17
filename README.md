@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shared File Desk (TypeScript)
 
-## Getting Started
+Same app as before, in TypeScript: drop a JPG or PDF, everyone who loads the
+page sees the same shared list, because uploads are saved on the server.
 
-First, run the development server:
+## Files
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- `app/page.tsx` — the page: dropzone + gallery, polls every 8s for new uploads
+- `app/api/upload/route.ts` — receives the file, validates it, saves to `public/uploads/`, appends metadata to `data/files.json`
+- `app/api/files/route.ts` — returns the current list from `data/files.json`
+- `lib/types.ts` — shared `FileEntry` type used by the page and both routes
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Install into a project
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. `npx create-next-app@latest my-app --typescript` (choose App Router)
+2. Copy `app/page.tsx`, `app/api/upload/`, `app/api/files/`, and `lib/types.ts` into your project, overwriting the starter `app/page.tsx`
+3. Make sure `tsconfig.json` has the `@/*` path alias (create-next-app sets this up by default):
+   ```json
+   "paths": { "@/*": ["./*"] }
+   ```
+4. `npm run dev`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The `public/uploads/` and `data/` folders are created automatically on first upload.
 
-## Learn More
+## Notes
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Same limits and caveats as the JS version:
+- `.jpg`/`.jpeg` and `.pdf` only, 10 MB max — edit `ACCEPTED_TYPES` / `MAX_SIZE`
+  in `page.tsx` and `upload/route.ts` to change
+- `data/files.json` is a flat file, fine for a small tool or demo; move to a
+  real database + blob storage (S3, R2) as you scale
+- **Serverless caveat:** the filesystem is ephemeral/read-only on Vercel and
+  similar platforms in production. This runs as-is on a normal Node server or
+  locally — swap the `fs` calls for real storage before deploying serverless.
