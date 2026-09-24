@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, CSSProperties } from 'react';
-import type { FileEntry, AcceptedType } from '@/lib/types';
+import { FILE_ACCEPT, FILE_TYPES, uploadType, type FileEntry } from '@/lib/types';
 
-const ACCEPTED_TYPES: AcceptedType[] = ['image/jpeg', 'application/pdf'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const POLL_MS = 8000;
 
@@ -56,8 +55,8 @@ export default function App() {
     if (!file) return;
     setError('');
 
-    if (!ACCEPTED_TYPES.includes(file.type as AcceptedType)) {
-      setError('Only JPG and PDF files are accepted.');
+    if (!uploadType(file)) {
+      setError('Only JPG, PDF, and Word (.doc or .docx) files are accepted.');
       return;
     }
     if (file.size > MAX_SIZE) {
@@ -92,7 +91,7 @@ export default function App() {
         <header className="header">
           <div className="tab">INTAKE</div>
           <h1>Shared File Desk</h1>
-          <p className="sub">Drop a JPG or PDF. Anyone with this page can see what lands here.</p>
+          <p className="sub">Drop a JPG, PDF, or Word document. Anyone with this page can see what lands here.</p>
         </header>
 
         <section
@@ -108,7 +107,7 @@ export default function App() {
           <input
               ref={inputRef}
               type="file"
-              accept=".jpg,.jpeg,application/pdf,image/jpeg"
+              accept={FILE_ACCEPT}
               hidden
               onChange={(e) => handleUpload(e.target.files)}
           />
@@ -116,7 +115,7 @@ export default function App() {
           <p className="drop-label">
             {uploading ? 'Filing your upload…' : dragActive ? 'Release to file it' : 'Drop file here, or click to select'}
           </p>
-          <p className="drop-note">JPG or PDF · up to 10 MB</p>
+          <p className="drop-note">JPG, PDF, or Word (.doc, .docx) · up to 10 MB</p>
         </section>
 
         {error && <div className="error" role="alert">{error}</div>}
@@ -149,7 +148,7 @@ export default function App() {
                           <img src={f.url} alt={f.name} loading="lazy" />
                       ) : (
                           <div className="pdf-icon">
-                            <span>PDF</span>
+                            <span>{FILE_TYPES[f.type].label}</span>
                           </div>
                       )}
                     </div>

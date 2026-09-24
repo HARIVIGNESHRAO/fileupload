@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile, readdir, stat } from 'fs/promises';
 import path from 'path';
-import type { FileEntry } from '@/lib/types';
+import { typeFromFilename, type FileEntry } from '@/lib/types';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'files.json');
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
@@ -25,7 +25,8 @@ export async function GET() {
         ]);
         const files: FileEntry[] = [];
         for (const entry of entries) {
-            if (!entry.isFile() || !/\.(jpe?g|pdf)$/i.test(entry.name)) continue;
+            const type = typeFromFilename(entry.name);
+            if (!entry.isFile() || !type) continue;
             let details;
             try {
                 details = await stat(path.join(UPLOAD_DIR, entry.name));
@@ -39,7 +40,7 @@ export async function GET() {
             files.push({
                 id: saved?.id ?? entry.name,
                 name: saved?.name ?? entry.name,
-                type: /\.pdf$/i.test(entry.name) ? 'application/pdf' : 'image/jpeg',
+                type,
                 size: details.size,
                 url: `${url}?v=${details.mtimeMs}`,
                 uploadedAt: saved?.uploadedAt ?? details.mtime.toISOString(),
